@@ -7,57 +7,164 @@
 # Original NNAIMQ code (V 1.0), 2021, University of Oviedo
 # Author (s): M. Gallegos in collaboration with J.M. Guevara-Vela and
 # A. M. Pendas.
+#
+# Version (1.1) 2023. Université de Rouen
+# Autor             : VCastor.
 ############################################################################
-import numpy as np
-import sys
-import subprocess
-import os
-import tensorflow as tf
-import pathlib
-from tensorflow import keras
-from tensorflow.keras import Sequential
-from tensorflow.keras.layers import Dense
-from tensorflow.keras.layers import Flatten
-import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
-from random import randint
+#   Hello World part
+print("Hello,\nI'm the version 1.1\n")
+#   Libraries that we need
+libraries, tflibraries = [], []
+libraries.append('import os')
+libraries.append('import sys')
+libraries.append('import pathlib')
+libraries.append('import subprocess')
+libraries.append('import numpy as np')
+libraries.append('import pandas as pd')
+libraries.append('import seaborn as sns')
+libraries.append('import matplotlib.pyplot as plt')
+libraries.append('from random import randint')
+tflibraries.append('import tensorflow as tf')
+tflibraries.append('from tensorflow import keras')
+tflibraries.append('from tensorflow.keras import Sequential')
+tflibraries.append('from tensorflow.keras.layers import Dense')
+tflibraries.append('from tensorflow.keras.layers import Flatten')
+
+#   Import libraries with te quiero demasiado
+from tqdm import tqdm
+for i in tqdm(range(len(libraries)), ncols=100, desc="Importing libraries   :: "):
+    exec(libraries[i])
+
+for i in tqdm(range(len(tflibraries)), ncols=100, desc="Importing Tensor Flow :: "):
+    exec(tflibraries[i])
+
+#   No warnings pirnted
 os.environ['KMP_WARNINGS'] = '0'
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
-tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
+
 ############################################################################
+#   Definimos lo definible
+def grepcut(re, file):
+    cmdgrep = 'grep -n "' + re + '" ' + file
+    cmdgrep = cmdgrep + ' | cut -f1 -d:'
+    return cmdgrep
+
+def adfsporadf(geomfile):
+    cmdsp  = grepcut('SINGLE POINT CALCULATION', geomfile)
+    cmdopt = grepcut('GEOMETRY OPTIMIZATION', geomfile)
+    try:
+        spline = int(os.popen(cmdsp).read())
+    except:
+        spline = 0
+    try:
+        optline = int(os.popen(cmdopt).red())
+    except:
+        optline = 0
+    cmdnatoms = grepcut("Total System Charge", geomfile)
+    atoline   = int(os.popen(cmdnatoms).read()) - 3
+    archivo   = open(geomfile, 'r', encoding="ISO-8859-1")
+    datalines = archivo.readlines()
+    natoms = datalines[atoline]
+    natoms = natoms.split()
+    natoms = int(natoms[0])
+    contents = str(natoms) + '\nADF output\n'
+    if spline:
+        cmd = grepcut("Geometry", geomfile)
+        iline = int(os.popen(cmd).read()) + 4
+    if optline:
+        cmd = grepcut("Optimized geometry:", geomfile)
+        iline = int(os.popen(cmd).read()) + 7
+    for i in range(iline, iline+natoms):
+        linen = datalines[i]
+        linen = linen.split()
+        for j in range(1, 4):
+            contents += str(linen[j]) + '  '
+        contents += str(linen[4])
+        contents += '\n'
+    archivo.close()
+    #   Temporal file
+    tmpfile = geomfile.replace("out", "xyz")
+    f = open(tmpfile, 'w')
+    f.write(contents)
+    f.close()
+    return contents
+
+def xyzoradf(geomfile):
+    """
+    This function returns the coordiantes that will be analised, it can read
+    ADF outputs and xyz files.
+    """
+    archivo   = open(geomfile, 'r', encoding="ISO-8859-1")
+    firstline = archivo.readline()
+    try:
+        natoms = int(firstline)
+    except:
+        natoms = 0
+    if (natoms > 0):
+        contents = archivo.read()
+        xyzfiletmp = geomfile
+        tmpf = False
+    else:
+        contents = adfsporadf(geomfile)
+        xyzfiletmp = geomfile.replace("out", "xyz")
+        tmpf = True
+    archivo.close()
+    return contents, xyzfiletmp, tmpf
+
+def abba(agneta='=', bjorn='Trinidad', benny='*', frida=72):
+    fb = "{:" + str(benny) + "^" + str(frida) + "}"
+    a  = agneta*frida
+    b  = fb.format(bjorn)
+    print(a)
+    print(b)
+    print(a)
+
 def norm(x,mean,std):
-  y=np.empty_like(x)
-  y[:]=x
-  y=np.transpose(y)
-  counter=0
-  for i in y:
-    y[counter,:]=(y[counter,:]-mean[counter])/(std[counter])
-    counter=counter+1
-  y=np.transpose(y)
-  return y
+    y=np.empty_like(x)
+    y[:]=x
+    y=np.transpose(y)
+    counter=0
+    for i in y:
+        y[counter,:]=(y[counter,:]-mean[counter])/(std[counter])
+        counter=counter+1
+    y=np.transpose(y)
+    return y
+
 ############################################################################
+#   The molecules should be in a list file
 list_geom=sys.argv[1]
-print("Reading the geometry files from",list_geom)
+tmpstr = "Reading the geometry files from :: " + str(list_geom)
+abba('=', tmpstr, '*', len(tmpstr))
+
 ############################################################################
 np.set_printoptions(threshold=sys.maxsize)
 pd.set_option("display.max_rows", None, "display.max_columns", None)
+
 ############################################################################
-mean_C= np.loadtxt("nnqC.mean",dtype='f')
-std_C = np.loadtxt("nnqC.std",dtype='f')
-mean_H= np.loadtxt("nnqH.mean",dtype='f')
-std_H = np.loadtxt("nnqH.std",dtype='f')
-mean_O= np.loadtxt("nnqO.mean",dtype='f')
-std_O = np.loadtxt("nnqO.std",dtype='f')
-mean_N= np.loadtxt("nnqN.mean",dtype='f')
-std_N = np.loadtxt("nnqN.std",dtype='f')
-print("Loading data statistics............DONE!")
+#====             mean and std files will be loaded                    ====#
+
+mean_stdv = ('mean_C', 'std_C', 'mean_H', 'std_H', 'mean_O', 'std_O', 
+             'mean_N', 'std_N')
+mean_stdf = ('"nnqC.mean"', '"nnqC.std"', '"nnqH.mean"', '"nnqH.std"',
+             '"nnqO.mean"', '"nnqO.std"', '"nnqN.mean"', '"nnqN.std"')
+
+for i in tqdm(range(len(mean_stdf)), ncols=99, desc="Statistics data :: "):
+    exec("%s = np.loadtxt(%s, dtype='f')" % (mean_stdv[i], mean_stdf[i]))
+
+print("Statistics data :: Loaded successfully ✅")
+
 ############################################################################
+#====                 Neural Networks will be loaded                   ====#
+
+model = ("model_C", "model_H", "model_O", "model_N")
+nnq   = ("'nnqC.h5'", "'nnqH.h5'", "'nnqO.h5'", "'nnqN.h5'")
 model_C = tf.keras.models.load_model('nnqC.h5')
-model_H = tf.keras.models.load_model('nnqH.h5')
-model_O = tf.keras.models.load_model('nnqO.h5')
-model_N = tf.keras.models.load_model('nnqN.h5')
-print("Loading Neural Networks............DONE!")
+
+for i in tqdm(range(len(model)), ncols=99, desc="Neural Networks :: "):
+    exec("%s = tf.keras.models.load_model(%s)" % (model[i], nnq[i]))
+
+print("Neural Networks :: Loaded successfully ✅")
+
 ############################################################################
 col_c = 129
 col_h = 132
@@ -82,18 +189,15 @@ column_names_n=colname_n
 ############################################################################
 with open(list_geom) as f34:
     for geomline in f34:
-        geom=geomline.rstrip('\n') 
-        geom=geom.replace(' ', '') 
-        print("************************************************************")
-        print("Computing the ACSF descriptor for file", geom)
-        print("************************************************************")
-        f=open(geom,"r")
-        contents=f.read()
-        f.close()
+        geom = geomline.rstrip('\n') 
+        geom = geom.replace(' ', '')
+        tmpname = "Computing the ACSF descriptor for file" + str(geom)
+        abba('=', tmpname, '*', len(tmpname))
+        contents, xyzf, tmpfbool = xyzoradf(geom)
         
         size=len(geom)
         nombre=geom[:size-4]
-        subprocess.check_call([r"./SSFC.exe", geom, nombre])
+        subprocess.check_call([r"./SSFC_arm.exe", xyzf, nombre])
         
         acsf_list=[]
         acsf_list.append(nombre + ".acsf")
@@ -102,7 +206,6 @@ with open(list_geom) as f34:
         acsf_list.append(nombre + "_O.acsf")
         acsf_list.append(nombre + "_N.acsf")
         for i in acsf_list:
-            #print(i)
             with open(i,'r+') as fopen:
                 string = ""
                 for line in fopen.readlines():
@@ -195,7 +298,7 @@ with open(list_geom) as f34:
         # OUTPUT FILES
         #########################################################
         cargas_output=nombre+".charge"
-        with open(geom) as f:
+        with open(xyzf) as f:
              lineas = f.readlines()[2:]
         etiqueta=[]
         for line in lineas:
@@ -231,3 +334,9 @@ with open(list_geom) as f34:
                 fout.write(str(num) + "  " + i + "  " +  str(vector[contador]) + "\n")
                 contador+=1
                 num+=1
+
+#   Clean the acsf files and if we use a temporal file
+for i in range(len(acsf_list)):
+    os.remove(acsf_list[i])
+if tmpfbool:
+    os.remove(xyzf)
