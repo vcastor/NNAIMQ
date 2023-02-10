@@ -57,11 +57,16 @@ def adfsporadf(geomfile):
     except:
         spline = 0
     try:
-        optline = int(os.popen(cmdopt).red())
+        optline = int(os.popen(cmdopt).read())
     except:
         optline = 0
     cmdnatoms = grepcut("Total System Charge", geomfile)
-    atoline   = int(os.popen(cmdnatoms).read()) - 3
+    if spline:
+        atoline = int(os.popen(cmdnatoms).read()) - 3
+    if optline:
+        atoline = os.popen(cmdnatoms).read()
+        atoline = atoline.split('\n')
+        atoline = int(atoline[0]) - 3
     archivo   = open(geomfile, 'r', encoding="ISO-8859-1")
     datalines = archivo.readlines()
     natoms = datalines[atoline]
