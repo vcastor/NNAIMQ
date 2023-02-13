@@ -11,9 +11,16 @@
 # Version (1.1) 2023. Université de Rouen
 # Autor             : VCastor.
 ############################################################################
-#   Hello World part
-print("Hello,\nI'm the version 1.1\n")
-#   Libraries that we need
+#                             Hello World part                             #
+print("")
+print("Hello,\nI'm the version 1.1")
+print("""
+┌┐┌ ┌┐┌ ┌─┐ ┬ ┌┬┐ ┌─┐
+│││ │││ ├─┤ │ │││ │ ┤┐
+┘└┘ ┘└┘ ┴ ┴ ┴ ┴ ┴ └─┘└─
+""")
+############################################################################
+#                          Libraries that we need                          #
 libraries, tflibraries = [], []
 libraries.append('import os')
 libraries.append('import sys')
@@ -43,13 +50,22 @@ os.environ['KMP_WARNINGS'] = '0'
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 
 ############################################################################
-#   Definimos lo definible
+#                           Definimos lo definible                         #
 def grepcut(re, file):
+    """
+    This function take a regular expresion and a file to obtein the command
+    to find the line or lines where the regular expresion is in the file.
+    $ grep -n "regular expresion" file.somewhere | cut -f1 -d:
+    """
     cmdgrep = 'grep -n "' + re + '" ' + file
     cmdgrep = cmdgrep + ' | cut -f1 -d:'
     return cmdgrep
 
 def adfsporadf(geomfile):
+    """
+    This function analize the ADF output to know if it is an output from a
+    Single Point or a Geometry Optimization calculation.
+    """
     cmdsp  = grepcut('SINGLE POINT CALCULATION', geomfile)
     cmdopt = grepcut('GEOMETRY OPTIMIZATION', geomfile)
     try:
@@ -60,6 +76,9 @@ def adfsporadf(geomfile):
         optline = int(os.popen(cmdopt).read())
     except:
         optline = 0
+    archivo   = open(geomfile, 'r', encoding="ISO-8859-1")
+    datalines = archivo.readlines()
+    #   How many atoms the systme has ?
     cmdnatoms = grepcut("Total System Charge", geomfile)
     if spline:
         atoline = int(os.popen(cmdnatoms).read()) - 3
@@ -67,27 +86,30 @@ def adfsporadf(geomfile):
         atoline = os.popen(cmdnatoms).read()
         atoline = atoline.split('\n')
         atoline = int(atoline[0]) - 3
-    archivo   = open(geomfile, 'r', encoding="ISO-8859-1")
-    datalines = archivo.readlines()
     natoms = datalines[atoline]
     natoms = natoms.split()
     natoms = int(natoms[0])
+    #   Start like a xyz file
     contents = str(natoms) + '\nADF output\n'
+    #   Where are the coordinates ?
     if spline:
         cmd = grepcut("Geometry", geomfile)
         iline = int(os.popen(cmd).read()) + 4
     if optline:
         cmd = grepcut("Optimized geometry:", geomfile)
         iline = int(os.popen(cmd).read()) + 7
+    #   All the atoms
     for i in range(iline, iline+natoms):
         linen = datalines[i]
         linen = linen.split()
+        #   atom    x   y
         for j in range(1, 4):
             contents += str(linen[j]) + '  '
+        #   z and skip to next line
         contents += str(linen[4])
         contents += '\n'
     archivo.close()
-    #   Temporal file
+    #   Temporal file to write the coordinates
     tmpfile = geomfile.replace("out", "xyz")
     f = open(tmpfile, 'w')
     f.write(contents)
@@ -96,8 +118,8 @@ def adfsporadf(geomfile):
 
 def xyzoradf(geomfile):
     """
-    This function returns the coordiantes that will be analised, it can read
-    ADF outputs and xyz files.
+    This function will analise if the input is a ADF output or a xyz file. In
+    case that it is a ADF output will call a function to anilise it.
     """
     archivo   = open(geomfile, 'r', encoding="ISO-8859-1")
     firstline = archivo.readline()
@@ -114,9 +136,15 @@ def xyzoradf(geomfile):
         xyzfiletmp = geomfile.replace("out", "xyz")
         tmpf = True
     archivo.close()
+    #      contents of the coordinates in xyz format
+    #      temporal file name
+    #      Boolean the temporal file was written (?)
     return contents, xyzfiletmp, tmpf
 
 def abba(agneta='=', bjorn='Trinidad', benny='*', frida=72):
+    """
+    This function just has some parameters to print
+    """
     fb = "{:" + str(benny) + "^" + str(frida) + "}"
     a  = agneta*frida
     b  = fb.format(bjorn)
@@ -136,12 +164,22 @@ def norm(x,mean,std):
     return y
 
 ############################################################################
-#   The molecules should be in a list file
-list_geom=sys.argv[1]
-tmpstr = "Reading the geometry files from :: " + str(list_geom)
+#   The System to analise should be listed in a plain text file
+list_geom = sys.argv[1]
+tmpstr    = "Reading the geometry files from :: " + str(list_geom)
+print("")
 abba('=', tmpstr, '*', len(tmpstr))
+tmpstr = ("The system(s) (is/are):")
+print("")
+abba('=', tmpstr, '*', len(tmpstr))
+archivo = open(list_geom, 'r', encoding="ISO-8859-1")
+systems = archivo.readlines()
+for i in range(len(systems)):
+    print(systems[i])
+archivo.close()
 
 ############################################################################
+#                        Numpy and Pandas options                          #
 np.set_printoptions(threshold=sys.maxsize)
 pd.set_option("display.max_rows", None, "display.max_columns", None)
 
@@ -157,6 +195,7 @@ for i in tqdm(range(len(mean_stdf)), ncols=99, desc="Statistics data :: "):
     exec("%s = np.loadtxt(%s, dtype='f')" % (mean_stdv[i], mean_stdf[i]))
 
 print("Statistics data :: Loaded successfully ✅")
+print("")
 
 ############################################################################
 #====                 Neural Networks will be loaded                   ====#
@@ -169,6 +208,7 @@ for i in tqdm(range(len(model)), ncols=99, desc="Neural Networks :: "):
     exec("%s = tf.keras.models.load_model(%s)" % (model[i], nnq[i]))
 
 print("Neural Networks :: Loaded successfully ✅")
+print("")
 
 ############################################################################
 col_c = 129
@@ -192,6 +232,7 @@ column_names_h=colname_h
 column_names_o=colname_o
 column_names_n=colname_n
 ############################################################################
+#                 Start the loop for all system to analise                 #
 with open(list_geom) as f34:
     for geomline in f34:
         geom = geomline.rstrip('\n') 
@@ -202,6 +243,7 @@ with open(list_geom) as f34:
         
         size=len(geom)
         nombre=geom[:size-4]
+        #   Be careful with the executable
         subprocess.check_call([r"./SSFC_arm.exe", xyzf, nombre])
         
         acsf_list=[]
@@ -315,7 +357,7 @@ with open(list_geom) as f34:
         contador_h=0
         contador_o=0
         contador_n=0
-        for i in  etiqueta:
+        for i in etiqueta:
             if (i == "C"):
               vector.append(C_predictions[contador_c])
               contador_c+=1
@@ -334,13 +376,15 @@ with open(list_geom) as f34:
         contador=0
         num=1
         with open(cargas_output, 'w') as fout:
-             fout.write(" Atom Number " + " Atom Label " + " Charge " + "\n")
+             fout.write(" Atom Number " + "  Atom Label  " + "   Charge   " + "\n")
              for i in etiqueta:
-                fout.write(str(num) + "  " + i + "  " +  str(vector[contador]) + "\n")
+                fout.write('{:^13}'.format(str(num)) + '{:^14}'.format(str(i))
+                               + f'{vector[contador]:+.6f}' + "\n")
                 contador+=1
                 num+=1
 
-#   Clean the acsf files and if we use a temporal file
+############################################################################
+#             Clean the acsf files and if we use a temporal file           #
 for i in range(len(acsf_list)):
     os.remove(acsf_list[i])
 if tmpfbool:
