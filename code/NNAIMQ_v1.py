@@ -53,8 +53,11 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 #                           Definimos lo definible                         #
 def grepcut(re, file):
     """
-    This function take a regular expresion and a file to obtein the command
-    to find the line or lines where the regular expresion is in the file.
+    This function takes:
+    i)  a regular expresion; and 
+    ii) a file (file path).
+    To obtein the command to find the line or lines where the regular
+    expresion is in the file. Equivalent in bash as ::
     $ grep -n "regular expresion" file.somewhere | cut -f1 -d:
     """
     cmdgrep = 'grep -n "' + re + '" ' + file
@@ -63,7 +66,7 @@ def grepcut(re, file):
 
 def adfsporadf(geomfile):
     """
-    This function analize the ADF output to know if it is an output from a
+    This function analizes an ADF output to know if it is an output from a
     Single Point or a Geometry Optimization calculation.
     """
     cmdsp  = grepcut('SINGLE POINT CALCULATION', geomfile)
@@ -118,8 +121,9 @@ def adfsporadf(geomfile):
 
 def xyzoradf(geomfile):
     """
-    This function will analise if the input is a ADF output or a xyz file. In
-    case that it is a ADF output will call a function to anilise it.
+    This function will analise if the input file is an ADF output or a xyz
+    file. In case that it is a ADF output the function will call another
+    function [adfsporadf] to analise the input.
     """
     archivo   = open(geomfile, 'r', encoding="ISO-8859-1")
     firstline = archivo.readline()
@@ -138,16 +142,16 @@ def xyzoradf(geomfile):
     archivo.close()
     #      contents of the coordinates in xyz format
     #      temporal file name
-    #      Boolean the temporal file was written (?)
+    #      A temporal file was written (?)
     return contents, xyzfiletmp, tmpf
 
 def abba(agneta='=', bjorn='Trinidad', benny='*', frida=72):
     """
-    This function just has some parameters to print
+    This function has just some parameters to print.
     """
-    fb = "{:" + str(benny) + "^" + str(frida) + "}"
-    a  = agneta*frida
-    b  = fb.format(bjorn)
+    f = "{:" + str(benny) + "^" + str(frida) + "}"
+    a = agneta*frida
+    b = f.format(bjorn)
     print(a)
     print(b)
     print(a)
@@ -164,19 +168,23 @@ def norm(x,mean,std):
     return y
 
 ############################################################################
-#   The System to analise should be listed in a plain text file
+#       The System to analise should be listed in a plain text file        #
 list_geom = sys.argv[1]
-tmpstr    = "Reading the geometry files from :: " + str(list_geom)
+
+tmpstr = "Reading the geometry files from :: " + str(list_geom)
 print("")
 abba('=', tmpstr, '*', len(tmpstr))
+
 tmpstr = ("The system(s) (is/are):")
 print("")
 abba('=', tmpstr, '*', len(tmpstr))
+
 archivo = open(list_geom, 'r', encoding="ISO-8859-1")
 systems = archivo.readlines()
 for i in range(len(systems)):
-    print(systems[i])
+    print(systems[i].replace("\n", ""))
 archivo.close()
+print("")
 
 ############################################################################
 #                        Numpy and Pandas options                          #
@@ -194,8 +202,7 @@ mean_stdf = ('"nnqC.mean"', '"nnqC.std"', '"nnqH.mean"', '"nnqH.std"',
 for i in tqdm(range(len(mean_stdf)), ncols=99, desc="Statistics data :: "):
     exec("%s = np.loadtxt(%s, dtype='f')" % (mean_stdv[i], mean_stdf[i]))
 
-print("Statistics data :: Loaded successfully ✅")
-print("")
+print("Statistics data :: Loaded successfully ✅ \n")
 
 ############################################################################
 #====                 Neural Networks will be loaded                   ====#
@@ -207,7 +214,7 @@ model_C = tf.keras.models.load_model('nnqC.h5')
 for i in tqdm(range(len(model)), ncols=99, desc="Neural Networks :: "):
     exec("%s = tf.keras.models.load_model(%s)" % (model[i], nnq[i]))
 
-print("Neural Networks :: Loaded successfully ✅")
+print("Neural Networks :: Loaded successfully ✅ \n")
 print("")
 
 ############################################################################
@@ -237,10 +244,11 @@ with open(list_geom) as f34:
     for geomline in f34:
         geom = geomline.rstrip('\n') 
         geom = geom.replace(' ', '')
+
         tmpname = "Computing the ACSF descriptor for file" + str(geom)
         abba('=', tmpname, '*', len(tmpname))
+
         contents, xyzf, tmpfbool = xyzoradf(geom)
-        
         size=len(geom)
         nombre=geom[:size-4]
         #   Be careful with the executable
@@ -340,7 +348,7 @@ with open(list_geom) as f34:
         if (os.stat(acsf_list[4]).st_size != 0) :
          for i in N_predictions:
             molec_charge=molec_charge+i
-        print("Total Molecular Charge", molec_charge)
+        print("Total Molecular Charge", molec_charge, "\n")
         #########################################################
         # OUTPUT FILES
         #########################################################
@@ -382,10 +390,9 @@ with open(list_geom) as f34:
                                + f'{vector[contador]:+.6f}' + "\n")
                 contador+=1
                 num+=1
-
-############################################################################
-#             Clean the acsf files and if we use a temporal file           #
-for i in range(len(acsf_list)):
-    os.remove(acsf_list[i])
-if tmpfbool:
-    os.remove(xyzf)
+        #########################################################
+        #  Clean the acsf files and if we use a temporal file
+        for i in range(len(acsf_list)):
+            os.remove(acsf_list[i])
+        if tmpfbool:
+            os.remove(xyzf)
