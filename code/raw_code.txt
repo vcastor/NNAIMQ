@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 ############################################################################
                     #    #  #    #    ##     #####   ####
                     # #  #  # #  #   #  #      #    #    #
@@ -156,6 +157,18 @@ def abba(agneta='=', bjorn='Trinidad', benny='*', frida=72):
     print(b)
     print(a)
 
+def htae(lista):
+    """
+    To lead a better life
+    Here, There and Everywhere
+    """
+    here = '/Users/vcastor/Documents/PhD_Rouen/before/NNAIMQ/arm_branch/NNAIMQ/code/'
+    #There
+    for i in range(len(lista)):
+        lista[i] = "r'" + here + lista[i] + "'"
+    # and Everywhere
+    return lista
+
 def norm(x,mean,std):
     y=np.empty_like(x)
     y[:]=x
@@ -192,24 +205,26 @@ np.set_printoptions(threshold=sys.maxsize)
 pd.set_option("display.max_rows", None, "display.max_columns", None)
 
 ############################################################################
-#====             mean and std files will be loaded                    ====#
+#====                    Load mean and std files                       ====#
 
 mean_stdv = ('mean_C', 'std_C', 'mean_H', 'std_H', 'mean_O', 'std_O', 
              'mean_N', 'std_N')
-mean_stdf = ('"nnqC.mean"', '"nnqC.std"', '"nnqH.mean"', '"nnqH.std"',
-             '"nnqO.mean"', '"nnqO.std"', '"nnqN.mean"', '"nnqN.std"')
+mean_stdf = ['nnqC.mean', 'nnqC.std', 'nnqH.mean', 'nnqH.std',
+             'nnqO.mean', 'nnqO.std', 'nnqN.mean', 'nnqN.std']
+mean_stdf = htae(mean_stdf)
 
 for i in tqdm(range(len(mean_stdf)), ncols=99, desc="Statistics data :: "):
     exec("%s = np.loadtxt(%s, dtype='f')" % (mean_stdv[i], mean_stdf[i]))
 
 print("Statistics data :: Loaded successfully ✅ \n")
 
-############################################################################
-#====                 Neural Networks will be loaded                   ====#
+#====                   Load Neural Networks files                     ====#
 
-model = ("model_C", "model_H", "model_O", "model_N")
-nnq   = ("'nnqC.h5'", "'nnqH.h5'", "'nnqO.h5'", "'nnqN.h5'")
-model_C = tf.keras.models.load_model('nnqC.h5')
+model = ('model_C', 'model_H', 'model_O', 'model_N')
+nnq   = ['nnqC.h5', 'nnqH.h5', 'nnqO.h5', 'nnqN.h5']
+nnq   = htae(nnq)
+
+exec("%s = tf.keras.models.load_model(%s)" % (model[0], nnq[0]))
 
 for i in tqdm(range(len(model)), ncols=99, desc="Neural Networks :: "):
     exec("%s = tf.keras.models.load_model(%s)" % (model[i], nnq[i]))
