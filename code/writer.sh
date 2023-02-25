@@ -8,7 +8,7 @@
 # This script even install python if your computer does not have it,   #
 # however, it cannot install Tensor Flow, since it has many variables  #
 # to take into accout and it is not the propouse of this repository    #
-#                                                      Victoria Castor #
+#                                                             V Castor #
 ########################################################################
 
 ########################################################################
@@ -16,8 +16,10 @@ here=`pwd`
 OS=`uname`                                                             # macOS or Linux flavour
 if [ "$OS" = 'Darwin' ]; then                                          # macOS (or OSX)
   if ! command -v brew &> /dev/null; then                              # Install Homebrew if it is not installed
-    echo "Your computer does not have Homebrew (package manager)"
-    echo "I will installed for you because I need it"
+    echo "************************************************************************"
+    echo "! Your computer does not have Homebrew (package manager)               !"
+    echo "! I will installed for you because I need it                           !"
+    echo "************************************************************************"
     curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh
   fi
 elif [ "$OS" = 'Linux' ]; then                                         # Linux flavour
@@ -26,13 +28,14 @@ fi
 
 ########################################################################
 # architecture
+ssfc="subprocess.check_call([r\""${here}
 uname -a | grep x86_64 &> /dev/null
 if [ "$?" = "0" ]; then                                                # x86_64
-  ssfc="subprocess.check_call([r\"./SSFC.exe\", xyzf, nombre])"
+  ssfc=${ssfc}"/SSFC.exe\", xyzf, nombre])"
 else
   uname -a | grep arm &> /dev/null
   if [ "$?" = "0" ]; then                                              # arm
-    ssfc="subprocess.check_call([r\"./SSFC_arm.exe\", xyzf, nombre])"
+    ssfc=${ssfc}"/SSFC_arm.exe\", xyzf, nombre])"
   else
     arch=`uname -a`
     echo "************************************************************************"
@@ -67,6 +70,14 @@ if ! ( command -v python3 &> /dev/null || command -v python &> /dev/null ); then
   elif [ "$OS" = 'CentOS' ]; then
     sudo yum update -y
     sudo yum install -y python3
+  else
+    echo "************************************************************************"
+    echo "! Install python3, svp.                                                !"
+    echo "! Your Operative System is:                                            !"
+    echo $OS
+    echo "! Offical documentation to download Python:                            !"
+    echo "! https://www.python.org/downloads/                                    !"
+    echo "************************************************************************"
   fi
 fi                                              # Installed if it wasn't
 
@@ -140,8 +151,9 @@ fi
 
 ########################################################################
 # WRITE(*,*)
+rm -rf NNAIMQ.py
 touch NNAIMQ.py
-echo "# -*- coding: UTF-8 -*-  " >> NNAIMQ.py
+echo "# -*- coding: UTF-8 -*-  " > NNAIMQ.py
 sed -n '2,166p' raw_code.txt >> NNAIMQ.py
 echo "    here = \"${here}/\"" >> NNAIMQ.py
 sed -n '168,271p' raw_code.txt >> NNAIMQ.py

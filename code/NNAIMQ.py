@@ -1,4 +1,4 @@
-#!/opt/homebrew/bin/python3
+# -*- coding: UTF-8 -*-  
 #--------------------------------------------------------------------------#
 #    ███╗   ██╗  ███╗   ██╗   █████╗  ████████╗  ███╗   ███╗   ██████╗     #
 #    ████╗  ██║  ████╗  ██║  ██╔══██╗ ╚══██╔══╝  ████╗ ████║  ██╔═══██╗    #
@@ -164,7 +164,7 @@ def htae(lista):
     To lead a better life
     Here, There and Everywhere
     """
-    here = '/Users/vcastor/Documents/PhD_Rouen/before/NNAIMQ/arm_branch/NNAIMQ/code/'
+    here = "/Users/vcastor/Documents/PhD_Rouen/before/NNAIMQ/arm_branch/NNAIMQ/code/"
     #There
     for i in range(len(lista)):
         lista[i] = "r'" + here + lista[i] + "'"
@@ -269,7 +269,7 @@ with open(list_geom) as f34:
         size=len(geom)
         nombre=geom[:size-4]
         #   Be careful with the executable
-        subprocess.check_call([r"./SSFC_arm.exe", xyzf, nombre])
+        subprocess.check_call([r"/Users/vcastor/Documents/PhD_Rouen/before/NNAIMQ/arm_branch/NNAIMQ/code/SSFC_arm.exe", xyzf, nombre])
         
         acsf_list=[]
         acsf_list.append(nombre + ".acsf")
