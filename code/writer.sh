@@ -23,7 +23,23 @@ if [ "$OS" = 'Darwin' ]; then                                          # macOS (
     curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh
   fi
 elif [ "$OS" = 'Linux' ]; then                                         # Linux flavour
-  OS=`head -1 /etc/os-release | cut -f2 -d= | cut -f2 -d\"`
+  #OS=`head -1 /etc/os-release | cut -f2 -d= | cut -f2 -d\"`
+  head -1 /etc/os-release | grep Ubuntu &> /dev/null
+  if [ "$?" = "0" ]; then
+    OS='Ubuntu'
+  else
+    head -1 /etc/os-release | grep Debian &> /dev/null
+    if [ "$?" = "0" ]; then
+      OS='Debian'
+    else
+      head -1 /etc/os-release | grep CentOS &> /dev/null
+      if [ "$?" = "0" ]; then
+        OS='CentOS'
+      else
+        OS=`head -1 /etc/os-release`
+      fi
+    fi
+  fi
 fi
 
 ########################################################################
@@ -45,7 +61,7 @@ else
     echo "!                                                                      !"
     echo "! Your architecture is:                                                !"
     echo $arch
-    echo "! Tensor Flow has not been (and will never be) developed for old       !"
+    echo "! Tensor Flow has not been (and will be never) developed for old       !"
     echo "! architecutres like x86_32.                                           !"
     echo "!                                                                      !"
     echo "! If you have any other trouble, contact:                              !"
@@ -107,6 +123,9 @@ if ! command -v pip3 &> /dev/null; then
     elif [ "$OS" = 'CentOS' ]; then
       sudo yum –y update
       sudo yum install python3-pip
+    else
+      echo "install pip3, you're using a $OS OS"
+      echo "I'm not sure how install it in your computer for you."
     fi
 elif ! command -v pip &> /dev/null; then
     echo "Your computer has python interpreter but with some missings"
